@@ -1,0 +1,2 @@
+from video_utils.frame_analysis.base_frame_analysis import BaseFrameAnalysis
+from video_utils.frame_analysis.default_frame_analysis import DefaultFrameAnalysis

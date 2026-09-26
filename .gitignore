@@ -216,3 +216,9 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+input/
+tmp/
+output/
+MuseScore/
+sound_segments/

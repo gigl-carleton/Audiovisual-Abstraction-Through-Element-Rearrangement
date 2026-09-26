@@ -1,0 +1,16 @@
+opencv-python~=4.8.1.78
+tqdm~=4.66.6
+moviepy~=2.2.1
+numpy~=1.26.4
+librosa~=0.10.1
+soundfile~=0.12.1
+numba~=0.58.1
+pillow~=11.2.1
+bridson~=0.1.0
+scipy~=1.11.4
+scikit-image~=0.20.0
+shapely~=2.1.1
+svgwrite~=1.4.3
+shapelysmooth~=0.2.1
+pedalboard~=0.9.17
+music21~=9.9.1
