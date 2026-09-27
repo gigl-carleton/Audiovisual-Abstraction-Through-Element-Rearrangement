@@ -31,6 +31,28 @@ NOTE_TO_SEMITONE = {
 }
 
 
+def get_subclasses(parent_class) -> list:
+    subclasses = set()
+    work = [parent_class]
+    while work:
+        parent = work.pop()
+        for child in parent.__subclasses__():
+            if child not in subclasses:
+                subclasses.add(child)
+                work.append(child)
+
+    return list(subclasses)
+
+
+instruments = get_subclasses(instrument.Instrument)
+instrument_names = [i.__name__.lower() for i in instruments]
+instrument_display_names = [i.__name__ for i in instruments]
+
+clefs = get_subclasses(clef.Clef)
+clefs_names = [i.__name__.lower() for i in clefs]
+clefs_display_names = [i.__name__ for i in clefs]
+
+
 def analyze_signal(x, sr, segment_duration, n_freqs):
     seg_len = int(segment_duration * sr)
     n_segments = len(x) // seg_len
@@ -245,8 +267,8 @@ class SoundToMusicConfig(common.SavableObject):
         self.effects_chain = effects_chain
         self.input_path = input_path
         self.output_directory = output_directory
-        self.min_frequency = min_frequency
-        self.max_frequency = max_frequency
+        self.min_frequency: float = min_frequency
+        self.max_frequency: float = max_frequency
         self.musescore_path = musescore_path
         self.note_velocity = note_velocity
 
@@ -260,12 +282,59 @@ class SoundToMusicConfig(common.SavableObject):
 
     @classmethod
     def from_argv(cls):
+        parser = common.argv.get_argparse(
+            "Converts an audio clip to several concurrent tracks of music notes, "
+            "and is then rendered with MuseScore (if installed). "
+            "An optional effects chain can be applied to the result if desired."
+        )
+        parser.add_argument("result", help="The name of the result to render as music")
+        parser.add_argument("tempo", type=float, help="The tempo to use when converting the sound to music")
+        parser.add_argument("--precision", type=float, default=1/8, help="The minimum note duration that can be used")
+        parser.add_argument("tracks", nargs='+', help="A list of instruments to use for each track")
+        parser.add_argument(
+            "--musescore", help="The path to MuseScore. See the README for setup instructions. "
+                                "If omitted, only a .midi and MusicXML file will be produced"
+        )
+
+        parser.add_argument(
+            '--standard_velocity', action='store_true',
+            help="If enabled, all notes will assume a constant velocity instead of being inferred by the amplitude"
+        )
+
+        args = parser.parse_args()
+
+        tracks = []
+        for track in args.tracks:
+            if "|" in track:
+                split_track = track.split("|")
+                selected_instrument = split_track[0]
+                selected_clef = split_track[1]
+
+            else:
+                selected_instrument = track
+                selected_clef = clef.TrebleClef.__name__
+
+            if selected_instrument.lower() not in instrument_names:
+                raise ValueError("Requested instrument '{}' is not supported. Please pick from the following list: {}".format(
+                    selected_instrument, ", ".join(instrument_display_names)
+                ))
+
+            index = instrument_names.index(selected_instrument.lower())
+            selected_instrument = instruments[index]()
+
+            if selected_clef.lower() not in clefs_names:
+                raise ValueError("Requested clef '{}' is not supported. Please pick from the following list: {}".format(
+                    selected_clef, ", ".join(clefs_display_names)
+                ))
+            index = clefs_names.index(selected_clef.lower())
+            selected_clef = clefs[index]()
+
+            tracks.append(Track(selected_instrument, selected_clef))
+
         return cls(
-            130, 1/8, [
-                    Track(instrument.Piano(), clef.TrebleClef()),
-                    Track(instrument.Piano(), clef.BassClef()),
-            ],
-            "output/tmp/raw_audio.wav", "output/tmp"
+            args.tempo, args.precision, tracks,
+            os.path.join("output", args.result, "raw_audio.wav"), os.path.join("output", args.result),
+            musescore_path=args.musescore, note_velocity=not args.standard_velocity
         )
 
 
@@ -295,7 +364,11 @@ def sound_to_music(config: SoundToMusicConfig):
         if track.instrument is None:
             continue
 
-        logging.info("Instrument #{} - {}".format(i + 1, track.instrument.__class__.__name__))
+        logging.info(
+            "Instrument #{} - {} in {}".format(
+                i + 1, track.instrument.__class__.__name__, track.clef.__class__.__name__
+            )
+        )
 
         part = stream.Part()
         part.append(track.instrument)
