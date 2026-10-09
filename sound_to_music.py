@@ -258,7 +258,7 @@ class SoundToMusicConfig(common.SavableObject):
             effects_chain: pedalboard.Pedalboard = None,
             min_frequency: typing.Union[str, float] = "A1",
             max_frequency: typing.Union[str, float] = "G5",
-            musescore_path: str = "",
+            musescore_path: str = None,
             note_velocity: bool = False
     ):
         self.tempo = tempo
@@ -269,7 +269,7 @@ class SoundToMusicConfig(common.SavableObject):
         self.output_directory = output_directory
         self.min_frequency: float = min_frequency
         self.max_frequency: float = max_frequency
-        self.musescore_path = musescore_path
+        self.musescore_path = MUSESCORE_PATH if musescore_path is None else musescore_path
         self.note_velocity = note_velocity
 
         if self.effects_chain is None:
@@ -292,8 +292,10 @@ class SoundToMusicConfig(common.SavableObject):
         parser.add_argument("--precision", type=float, default=1/8, help="The minimum note duration that can be used")
         parser.add_argument("tracks", nargs='+', help="A list of instruments to use for each track")
         parser.add_argument(
-            "--musescore", help="The path to MuseScore. See the README for setup instructions. "
-                                "If omitted, only a .midi and MusicXML file will be produced"
+            "--musescore",
+            help="The path to MuseScore. See the README for setup instructions. "
+                 "If omitted, only a .midi and MusicXML file will be produced",
+            default=MUSESCORE_PATH
         )
 
         parser.add_argument(
@@ -403,7 +405,7 @@ def sound_to_music(config: SoundToMusicConfig):
 
     logging.info("Rendering audio with MuseScore...")
     os.system('{} "{}" -o "{}"'.format(
-        MUSESCORE_PATH,
+        config.musescore_path,
         os.path.join(config.output_directory, "music_audio.xml"),
         os.path.join(config.output_directory, "music_audio.wav")
     ))
