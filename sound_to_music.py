@@ -259,7 +259,7 @@ class SoundToMusicConfig(common.SavableObject):
             min_frequency: typing.Union[str, float] = "A1",
             max_frequency: typing.Union[str, float] = "G5",
             musescore_path: str = "",
-            note_velocity: bool = True
+            note_velocity: bool = False
     ):
         self.tempo = tempo
         self.precision = precision

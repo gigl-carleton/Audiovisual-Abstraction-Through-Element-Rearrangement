@@ -11,10 +11,10 @@ import audio_utils.sound_stitch.default_sound_stitch as default_sound_stitch
 
 
 class DefaultAudioPipe(base_audio_pipe.BaseAudioPipe):
-    def __init__(self):
+    def __init__(self, segment_overlap: float = 0.125, segment_path: str = "sound_segments"):
         super().__init__()
-        self.overlap: float = 0.125
-        self.segment_path = "sound_segments"
+        self.overlap: float = segment_overlap
+        self.segment_path = segment_path
 
         self.sound_segmenter = sound_segmentation.SoundSegmentation()
         self.chain_builder = default_chain_builder.DefaultChainBuilder()
