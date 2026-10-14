@@ -11,7 +11,7 @@ Presented at [ARTeFACTo 2026](https://2026.artefacto-conf.org/).
 First, clone the repository to your local machine.
 
 ```shell
-git clone https://github.com/ChrisPGraphics/Audiovisual-Abstraction-Through-Element-Rearrangement
+git clone https://github.com/gigl-carleton/Audiovisual-Abstraction-Through-Element-Rearrangement
 cd Audiovisual-Abstraction-Through-Element-Rearrangement
 ```
 
